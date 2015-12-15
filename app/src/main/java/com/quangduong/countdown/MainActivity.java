@@ -1,41 +1,41 @@
 package com.quangduong.countdown;
 
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Typeface;
-import android.media.Image;
 import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.format.DateUtils;
-import android.text.style.TtsSpan;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
-import android.widget.DatePicker;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.quangduong.countdown.utils.AudioPlayer;
 import com.quangduong.countdown.utils.GifDecoderView;
-import com.quangduong.countdown.utils.GifWebView;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
+    private static final String FILENAME = "initTime.txt";
     CountDownTimer mCountDownTimer;
     long mInitialTime = DateUtils.DAY_IN_MILLIS * 0 +
             DateUtils.HOUR_IN_MILLIS * 0 +
             DateUtils.MINUTE_IN_MILLIS * 0 +
             DateUtils.SECOND_IN_MILLIS * 5;
+    long mStartTimeApp = 0;
     MediaPlayer mp = new MediaPlayer();
 
     TextView mTv_days;
@@ -85,9 +85,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 layoutWidth = rl.getWidth();// width must be declare as a field
             }
         });
+        try {
+            FileInputStream fis = openFileInput(FILENAME);
 
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+            String initTimeString= reader.readLine();
+            mStartTimeApp = Long.parseLong(initTimeString);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            try {
+                mStartTimeApp = getTimeToChristmas();
+                FileOutputStream fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
+                fos.write(String.valueOf(mStartTimeApp).getBytes());
+            } catch (FileNotFoundException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         mInitialTime = getTimeToChristmas();
-
         AssetManager am = getApplicationContext().getAssets();
 
         Typeface typeface = Typeface.createFromAsset(am,
@@ -192,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onTick(long millisUntilFinished) {
             time.setLength(0);
             float dayUtilFinish =(millisUntilFinished / DateUtils.DAY_IN_MILLIS);
-            float days = (mInitialTime / (1000*60*60*24));
+            float days = (mStartTimeApp / (1000*60*60*24));
             if(days > 0){
                 delta = dayUtilFinish/days;
             }else {
